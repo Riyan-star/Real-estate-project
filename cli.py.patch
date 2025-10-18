@@ -1,0 +1,60 @@
+from models import Agent, Property
+from sqlalchemy import select
+=======
+from db import get_session
+from models import Agent, Property
+from sqlalchemy import select
+from decimal import Decimal, InvalidOperation
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+def add_property():
+    address = input("Address: ").strip()
+    city = input("City: ").strip()
+    state = input("State: ").strip()
+    zip_code = input("Zip code: ").strip()
+    price = input("Price: ").strip() or "0"
+    bedrooms = input_int("Bedrooms: ")
+    bathrooms = input_int("Bathrooms: ")
+    status = input("Status (For Sale/For Rent): ").strip() or "For Sale"
+    agent_id = input_int("Agent id (leave blank for none): ")
+    session = get_session()
+    try:
+        p = Property(address=address, city=city, state=state, zip_code=zip_code,
+                     price=price, bedrooms=bedrooms, bathrooms=bathrooms,
+                     status=status, agent_id=agent_id)
+        session.add(p)
+        session.commit()
+        print(f"Added Property id={p.id}")
+    finally:
+        session.close()
+=======
+def add_property():
+    address = input("Address: ").strip()
+    city = input("City: ").strip()
+    state = input("State: ").strip()
+    zip_code = input("Zip code: ").strip()
+    price_input = input("Price: ").strip() or "0"
+    try:
+        price = Decimal(price_input)
+    except InvalidOperation:
+        print("Invalid price input, defaulting to 0")
+        price = Decimal(0)
+    bedrooms = input_int("Bedrooms: ")
+    if bedrooms is None:
+        bedrooms = 0
+    bathrooms = input_int("Bathrooms: ")
+    if bathrooms is None:
+        bathrooms = 0
+    status = input("Status (For Sale/For Rent): ").strip() or "For Sale"
+    agent_id = input_int("Agent id (leave blank for none): ")
+    session = get_session()
+    try:
+        p = Property(address=address, city=city, state=state, zip_code=zip_code,
+                     price=price, bedrooms=bedrooms, bathrooms=bathrooms,
+                     status=status, agent_id=agent_id)
+        session.add(p)
+        session.commit()
+        print(f"Added Property id={p.id}")
+    finally:
+        session.close()

@@ -1,8 +1,21 @@
-# Virtual environments
+# Virtual envs
+.env
 env/
+.venv/
 venv/
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
 
-# Environment files
-.env
+# Editor
+.vscode/
+.idea/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+
+# OS
+.DS_Store

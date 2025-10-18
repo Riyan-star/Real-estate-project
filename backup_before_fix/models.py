@@ -84,4 +84,4 @@ class Transaction(Base):
 # Helper to create all tables when running models.py directly
 if __name__ == '__main__':
     Base.metadata.create_all(bind=engine)
-    print("✅ Tables created (SQLAlchemy Base.metadata.create_all)")
+    print("Tables created (SQLAlchemy Base.metadata.create_all)")

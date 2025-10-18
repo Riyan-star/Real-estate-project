@@ -1,49 +1,11 @@
-from decimal import Decimal, InvalidOperation
 from db import get_session
 from models import Agent, Property, Client, Showing, Transaction
 from sqlalchemy import select
 
 def input_int(prompt):
     try:
-        v = input(prompt).strip()
-        if v == '':
-            return None
-        return int(v)
+        return int(input(prompt))
     except (ValueError, TypeError):
-        return None
-
-def parse_price(raw: str):
-    """
-    Sanitize and convert price input to Decimal.
-    Accepts: "5m", "5,000,000", "5000000", "Ksh 5,000,000", "5000.00", "120k"
-    Heuristics:
-      - trailing 'm' or 'mn' -> million multiplier
-      - trailing 'k' -> thousand multiplier
-      - removes commas and common currency prefixes
-    Returns Decimal or None if invalid.
-    """
-    if raw is None:
-        return None
-    s = raw.strip().lower().replace(',', '').replace(' ', '')
-    if s == '':
-        return None
-    # handle currency prefixes
-    for prefix in ('ksh', 'kes', '$', 'usd', 'sh'):
-        if s.startswith(prefix):
-            s = s[len(prefix):]
-    try:
-        if s.endswith('mn') or s.endswith('m'):
-            num = s.rstrip('mn').rstrip('m')
-            return Decimal(num) * Decimal(1_000_000)
-        if s.endswith('k'):
-            num = s.rstrip('k')
-            return Decimal(num) * Decimal(1_000)
-        # keep only digits, dot and minus
-        filtered = ''.join(ch for ch in s if ch.isdigit() or ch in '.-')
-        if filtered == '':
-            return None
-        return Decimal(filtered)
-    except (InvalidOperation, ValueError):
         return None
 
 def list_properties():
@@ -59,19 +21,6 @@ def list_properties():
     finally:
         session.close()
 
-def list_agents():
-    session = get_session()
-    try:
-        agents = session.execute(select(Agent)).scalars().all()
-        print("---- Agents ----")
-        if not agents:
-            print("No agents found.")
-            return
-        for a in agents:
-            print(f"{a.id}: {a.name} - {a.email} ({a.phone}) License: {a.license_number}")
-    finally:
-        session.close()
-
 def add_agent():
     name = input("Agent name: ").strip()
     phone = input("Phone: ").strip()
@@ -83,9 +32,6 @@ def add_agent():
         session.add(a)
         session.commit()
         print(f"Added Agent id={a.id}")
-    except Exception as e:
-        session.rollback()
-        print("Failed to add agent:", e)
     finally:
         session.close()
 
@@ -94,34 +40,36 @@ def add_property():
     city = input("City: ").strip()
     state = input("State: ").strip()
     zip_code = input("Zip code: ").strip()
-    raw_price = input("Price: ").strip()
-    price = parse_price(raw_price)
-    if price is None:
-        print("Invalid price entered. Please enter numeric value (e.g. 120000, 5m, 120k).")
-        return
+    price = input("Price: ").strip() or "0"
     bedrooms = input_int("Bedrooms: ")
     bathrooms = input_int("Bathrooms: ")
     status = input("Status (For Sale/For Rent): ").strip() or "For Sale"
     agent_id = input_int("Agent id (leave blank for none): ")
-
     session = get_session()
     try:
-        # verify agent exists
-        if agent_id is not None:
-            agent = session.get(Agent, agent_id)
-            if agent is None:
-                print(f"Warning: agent with id={agent_id} not found. Property will be created without an agent.")
-                agent_id = None
-
         p = Property(address=address, city=city, state=state, zip_code=zip_code,
                      price=price, bedrooms=bedrooms, bathrooms=bathrooms,
                      status=status, agent_id=agent_id)
         session.add(p)
         session.commit()
         print(f"Added Property id={p.id}")
-    except Exception as e:
-        session.rollback()
-        print("Failed to add property:", e)
+    finally:
+        session.close()
+
+def list_agents():
+    session = get_session()
+    try:
+        agents = session.execute(select(Agent)).scalars().all()
+        print("---- Agents ----")
+        if not agents:
+            print("No agents found.")
+            return
+        for a in agents:
+            # some models use 'phone' and 'license_number' fields
+            phone = getattr(a, "phone", "")
+            license_no = getattr(a, "license_number", "")
+            email = getattr(a, "email", "")
+            print(f"{a.id}: {a.name} - {email} ({phone}) License: {license_no}")
     finally:
         session.close()
 
